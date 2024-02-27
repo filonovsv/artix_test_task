@@ -1,4 +1,4 @@
-INSERT INTO bonus_cards(amount)
-VALUES (123);
-INSERT INTO bonus_cards(amount)
-VALUES (321);
+INSERT INTO bonus_cards(amount, ovner)
+VALUES (123, 'user1');
+INSERT INTO bonus_cards(amount, ovner)
+VALUES (321, 'user2');

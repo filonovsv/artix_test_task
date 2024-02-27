@@ -6,6 +6,8 @@ import com.github.filonovsv.artix_test_tusk.repos.BonusCardRepository;
 import com.github.filonovsv.artix_test_tusk.repos.OperationRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -19,9 +21,13 @@ public class Controller {
 
 
     @GetMapping("balance/{cardId}")
-    private ResponseEntity<BonusCard> getBalance(@PathVariable Long cardId) {
+    private ResponseEntity<BonusCard> getBalance(@PathVariable Long cardId, Authentication authentication) {
         Optional<BonusCard> optionalBonusCard = bonusCardRepository.findById(cardId);
         if (optionalBonusCard.isPresent()) {
+            if (!authentication.getName().equals(optionalBonusCard.get().getOvner()) &&
+                    !authentication.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ADMIN"))) {
+                return ResponseEntity.notFound().build();
+            }
             return ResponseEntity.ok(optionalBonusCard.get());
         } else {
             return ResponseEntity.notFound().build();
@@ -66,7 +72,14 @@ public class Controller {
     }
 
     @GetMapping("history/{cardId}")
-    private ResponseEntity<List<Operation>> getHistory(@PathVariable Long cardId) {
+    private ResponseEntity<List<Operation>> getHistory(@PathVariable Long cardId, Authentication authentication) {
+        Optional<BonusCard> optionalBonusCard = bonusCardRepository.findById(cardId);
+        if (optionalBonusCard.isPresent()) {
+            if (!authentication.getName().equals(optionalBonusCard.get().getOvner()) &&
+                    !authentication.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ADMIN"))) {
+                return ResponseEntity.notFound().build();
+            }
+        }
         List<Operation> listOperation = operationRepository.getOperationByBonusCardId(cardId);
         return ResponseEntity.ok(listOperation);
     }

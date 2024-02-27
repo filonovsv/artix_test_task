@@ -23,6 +23,7 @@ class ArtixTestTuskApplicationTests {
     @Test
     void shouldReturnBalanceWhenBonusCardIsExist() {
         ResponseEntity<String> response = restTemplate
+                .withBasicAuth("user1", "abc123")
                 .getForEntity("/balance/1", String.class);
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
 
@@ -37,6 +38,7 @@ class ArtixTestTuskApplicationTests {
     @Test
     void shouldNotReturnABonusCardWithAnUnknownId() {
         ResponseEntity<String> response = restTemplate
+                .withBasicAuth("user1", "abc123")
                 .getForEntity("/balance/-1", String.class);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
@@ -47,6 +49,7 @@ class ArtixTestTuskApplicationTests {
     @DirtiesContext
     void shouldDoOperation() {
         ResponseEntity<String> responseChangeBalance = restTemplate
+                .withBasicAuth("admin", "cba321")
                 .postForEntity("/change_balance", new Operation(null, 1L, 1L), String.class);
         assertThat(responseChangeBalance.getStatusCode()).isEqualTo(HttpStatus.OK);
 
@@ -58,6 +61,7 @@ class ArtixTestTuskApplicationTests {
         assertThat(amount).isEqualTo(124);
 
         ResponseEntity<String> responseGetHistory = restTemplate
+                .withBasicAuth("admin", "cba321")
                 .getForEntity("/history/1", String.class);
         assertThat(responseGetHistory.getStatusCode()).isEqualTo(HttpStatus.OK);
 
@@ -69,16 +73,18 @@ class ArtixTestTuskApplicationTests {
     @Test
     @DirtiesContext
     void shouldCancelOperation() {
-
         ResponseEntity<Void> responseChangeBalance = restTemplate
+                .withBasicAuth("admin", "cba321")
                 .postForEntity("/change_balance", new Operation(null, 1L, 1L), Void.class);
         assertThat(responseChangeBalance.getStatusCode()).isEqualTo(HttpStatus.OK);
 
         ResponseEntity<Void> responseCancel = restTemplate
+                .withBasicAuth("admin", "cba321")
                 .postForEntity("/cancel_operation/1", null, Void.class);
         assertThat(responseChangeBalance.getStatusCode()).isEqualTo(HttpStatus.OK);
 
         ResponseEntity<String> responseGetHistory = restTemplate
+                .withBasicAuth("admin", "cba321")
                 .getForEntity("/history/1", String.class);
         assertThat(responseGetHistory.getStatusCode()).isEqualTo(HttpStatus.OK);
 
@@ -87,6 +93,7 @@ class ArtixTestTuskApplicationTests {
         assertThat(page.size()).isEqualTo(0);
 
         ResponseEntity<String> responseGetBalance = restTemplate
+                .withBasicAuth("admin", "cba321")
                 .getForEntity("/balance/1", String.class);
         assertThat(responseGetBalance.getStatusCode()).isEqualTo(HttpStatus.OK);
 
@@ -97,4 +104,15 @@ class ArtixTestTuskApplicationTests {
         Number amount = documentContextGetBalance.read("$.amount");
         assertThat(amount).isEqualTo(123);
     }
+
+    @Test
+    @DirtiesContext
+    void shouldNotAllowWithoutRoleUserToChangeBalance() {
+        ResponseEntity<Void> responseChangeBalance = restTemplate
+                .withBasicAuth("user", "abc123")
+                .postForEntity("/change_balance", new Operation(null, 1L, 1L), Void.class);
+        assertThat(responseChangeBalance.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+
+    }
+
 }

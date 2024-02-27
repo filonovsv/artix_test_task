@@ -10,4 +10,5 @@ public class BonusCard {
     @Id
     Long id;
     Long amount;
+    String ovner;
 }
